@@ -138,3 +138,70 @@ def show_information():
     print(f"Steps taken: {player.get('steps', '?')}")
     print(f"Day: {player.get('day', '?')}")
     print("------------------------------")
+
+# ---------- Shop ----------
+def buy_stuff():
+    while True:
+        print("\n----------------------- Shop Menu -------------------------")
+        # Pickaxe upgrade option
+        if player.get('pickaxe', 1) < 3:
+            next_pick = player['pickaxe']
+            cost = pickaxe_price[next_pick - 1]
+            print(f"(P)ickaxe upgrade to Level {next_pick+1} to mine {minerals[next_pick]} ore for {cost} GP")
+        else:
+            print("Pickaxe fully upgraded.")
+
+        # Backpack upgrade option
+        next_capacity = player.get('max_load', 10) + 2
+        backpack_cost = player.get('max_load', 10) * 2
+        print(f"(B)ackpack upgrade to carry {next_capacity} items for {backpack_cost} GP")
+
+        # Magic Torch option
+        valid_inputs = ['p', 'b', 'l']
+        if not player.get('magic_torch', False):
+            print(f"(T) Magic Torch (see 5x5 area) for 50 GP")
+            valid_inputs.append('t')
+        else:
+            print("Magic Torch already owned.")
+
+        print("(L)eave shop")
+        print("-----------------------------------------------------------")
+        print(f"GP: {player.get('GP', 0)}")
+
+        try:
+            choice = input("What do you want to buy? ").strip().lower()
+        except KeyboardInterrupt:
+            print("\nKeyboardInterrupt detected. Returning to town.")
+            return
+
+        if choice not in valid_inputs:
+            print("Invalid choice, please try again.")
+            continue
+
+        if choice == 'p' and player.get('pickaxe', 1) < 3:
+            cost = pickaxe_price[player['pickaxe'] - 1]
+            if player.get('GP', 0) >= cost:
+                player['GP'] -= cost
+                player['pickaxe'] += 1
+                print(f"Congratulations! You can now mine {minerals[player['pickaxe'] - 1]}!")
+            else:
+                print("Not enough GP.")
+
+        elif choice == 'b':
+            if player.get('GP', 0) >= backpack_cost:
+                player['GP'] -= backpack_cost
+                player['max_load'] = next_capacity
+                print(f"Congratulations! You can now carry {next_capacity} items!")
+            else:
+                print("Not enough GP.")
+
+        elif choice == 't' and not player.get('magic_torch', False):
+            if player.get('GP', 0) >= 50:
+                player['GP'] -= 50
+                player['magic_torch'] = True
+                print("You bought the Magic Torch! Your view in the mine is now much larger.")
+            else:
+                print("Not enough GP.")
+
+        elif choice == 'l':
+            break
