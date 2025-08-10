@@ -247,3 +247,105 @@ def sell_ore():
             player['warehouse'][ore] = 0
         else:
             print("Sale cancelled.")
+
+# ---------- Mining ----------
+def mine_turn():
+    try:
+        player['x'], player['y'] = player.get('portal', (0, 0))
+    except Exception:
+        player['x'], player['y'] = 0, 0
+    clear_fog(fog, player)
+
+    while True:
+        print(f"\nDAY {player.get('day', '?')}")
+        draw_view()
+        print(f"Turns left: {player.get('turns', 0)}    Load: {get_total_load(player)} / {player.get('max_load', 0)}    Steps: {player.get('steps', 0)}")
+        print("(WASD) to move | (M)ap | (I)nformation | (P)ortal | (Q)uit to town")
+        valid_inputs = ['w', 'a', 's', 'd', 'm', 'i', 'p', 'q']
+        try:
+            action = input("Action? ").strip().lower()
+        except KeyboardInterrupt:
+            print("\nKeyboardInterrupt detected. Returning to town.")
+            return
+        if action not in valid_inputs:
+            print("Invalid input.")
+            continue
+
+        if action in 'wasd':
+            dx, dy = 0, 0
+            if action == 'w': dy = -1
+            elif action == 'a': dx = -1
+            elif action == 's': dy = 1
+            elif action == 'd': dx = 1
+
+            nx = player.get('x', 0) + dx
+            ny = player.get('y', 0) + dy
+
+            if not (0 <= ny < len(game_map)) or not (0 <= nx < len(game_map[ny])):
+                print("You can't move there.")
+            else:
+                target = game_map[ny][nx]
+                current_load = get_total_load(player)
+
+                if target == 'T':
+                    return_to_town()
+                    return
+                elif target in mineral_names:
+                    if current_load >= player.get('max_load', 0):
+                        print("You can't carry any more.")
+                    elif player.get('pickaxe', 1) < minerals.index(mineral_names[target]) + 1:
+                        print(f"You need a better pickaxe to mine {mineral_names[target]}.")
+                    else:
+                        mined = 0
+                        if target == 'C': mined = randint(1, 5)
+                        elif target == 'S': mined = randint(1, 3)
+                        elif target == 'G': mined = randint(1, 2)
+                        can_carry = min(mined, player.get('max_load', 0) - current_load)
+                        player[mineral_names[target]] += can_carry
+                        print(f"You mined {mined} piece(s) of {mineral_names[target]}.")
+                        if can_carry < mined:
+                            print(f"...but you can only carry {can_carry} more piece(s)!")
+                        game_map[ny][nx] = ' '
+                        if (nx, ny, target) not in mined_nodes:
+                            mined_nodes.append((nx, ny, target))
+                        player['x'], player['y'] = nx, ny
+                        clear_fog(fog, player)
+
+                elif target == 'D':
+                    global current_level
+                    if current_level == 1:
+                        print("You step through the door to the next mine level!")
+                        current_level = 2
+                        load_map("level2.txt", game_map)
+                        initialize_fog()
+                        player['x'], player['y'] = 0, 0
+                        clear_fog(fog, player)
+                        continue
+                    elif current_level == 2:
+                        print("You step through the door back to the first mine!")
+                        current_level = 1
+                        load_map("level1.txt", game_map)
+                        initialize_fog()
+                        player['x'], player['y'] = MAP_WIDTH - 1, MAP_HEIGHT - 1
+                        clear_fog(fog, player)
+                        continue
+                else:
+                    player['x'], player['y'] = nx, ny
+                    clear_fog(fog, player)
+
+            player['steps'] += 1
+            player['turns'] -= 1
+            if player['turns'] <= 0:
+                print("You are exhausted.")
+                return_to_town()
+                return
+
+        elif action == 'm':
+            draw_map()
+        elif action == 'i':
+            show_information()
+        elif action == 'p':
+            return_to_town()
+            return
+        elif action == 'q':
+            return
