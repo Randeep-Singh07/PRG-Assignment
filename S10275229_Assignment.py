@@ -451,3 +451,71 @@ def view_high_scores():
         return
     for i, entry in enumerate(high_scores, 1):
         print(f"{i}. {entry['name']} - Days: {entry['days']}, Steps: {entry['steps']}, GP: {entry['GP']}")
+
+# ---------- Save / Load ----------
+def save_game():
+    with open('savegame.pkl', 'wb') as f:
+        pickle.dump((game_map, fog, player), f)
+    print("Game saved.")
+
+def load_game():
+    try:
+        with open('savegame.pkl', 'rb') as f:
+            data = pickle.load(f)
+            game_map[:] = data[0]
+            fog[:] = data[1]
+            player.clear()
+            player.update(data[2])
+            print("Game loaded.")
+            return True
+    except FileNotFoundError:
+        print("There aren't any saved games.")
+        return False
+    except Exception as e:
+        print(f"Error loading game: {e}")
+        return False
+
+# ---------- Main Menu ----------
+def show_main_menu():
+    print("\n--- Main Menu ----")
+    print("(N)ew game")
+    print("(L)oad saved game")
+    print("(4) View high scores")
+    print("(Q)uit")
+    print("------------------")
+
+def main_loop():
+    while True:
+        show_main_menu()
+        try:
+            choice = input("Your choice? ").strip().lower()
+        except KeyboardInterrupt:
+            print("\nKeyboardInterrupt detected. Exiting safely.")
+            exit()
+        if choice not in ['n', 'l', 'q', '4']:
+            print("Invalid choice, please pick a valid option.")
+            continue
+
+        if choice == 'n':
+            initialize_game()
+            town_loop()
+        elif choice == 'l':
+            if load_game():
+                town_loop()
+        elif choice == 'q':
+            print("Goodbye!")
+            break
+        elif choice == '4':
+            view_high_scores()
+
+# ---------- Game Start ----------
+print("---------------- Welcome to Sundrop Caves! ----------------")
+print("You spent all your money to get the deed to a mine, a small")
+print("  backpack, a simple pickaxe and a magical portal stone.\n")
+print("How quickly can you get the 1500 GP you need to retire")
+print("  and live happily ever after?")
+print("-----------------------------------------------------------")
+try:
+    main_loop()
+except Exception as e:
+    print(f"Fatal error: {e}")
