@@ -205,3 +205,45 @@ def buy_stuff():
 
         elif choice == 'l':
             break
+
+# ---------- Sell Ore ----------
+def sell_ore():
+    print("\n--- Sell Ore from Warehouse ---")
+    valid_inputs = ['c', 's', 'g', 'l']
+    while True:
+        print(f"Warehouse: Copper: {player['warehouse'].get('copper', 0)}, Silver: {player['warehouse'].get('silver', 0)}, Gold: {player['warehouse'].get('gold', 0)}")
+        print(f"GP: {player.get('GP', 0)}")
+        print("What would you like to sell?")
+        print("(C)opper, (S)ilver, (G)old, (L)eave")
+
+        try:
+            choice = input("Choice: ").strip().lower()
+        except KeyboardInterrupt:
+            print("\nKeyboardInterrupt detected. Returning to town.")
+            return
+        
+        if choice not in valid_inputs:
+            print("Invalid choice, please try again.")
+            continue
+        if choice == 'l':
+            break
+
+        ore = {'c': 'copper', 's': 'silver', 'g': 'gold'}[choice]
+        amount = player['warehouse'].get(ore, 0)
+        if amount == 0:
+            print(f"You have no {ore} to sell.")
+            continue
+
+        price = randint(*prices[ore])
+        print(f"The current price for {ore} is {price} GP each.")
+        try:
+            confirm = input(f"Sell all {amount} {ore} for {amount * price} GP? (y/n): ").strip().lower()
+        except KeyboardInterrupt:
+            print("\nKeyboardInterrupt detected. Cancelling sale.")
+            continue
+        if confirm == 'y':
+            player['GP'] += amount * price
+            print(f"Sold {amount} {ore} for {amount * price} GP.")
+            player['warehouse'][ore] = 0
+        else:
+            print("Sale cancelled.")
