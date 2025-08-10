@@ -349,3 +349,74 @@ def mine_turn():
             return
         elif action == 'q':
             return
+        
+# ---------- Town Loop ----------
+def show_town_menu():
+    print(f"\nDAY {player['day']}")
+    print("----- Sundrop Town -----")
+    print("(B)uy stuff")
+    print("See Player (I)nformation")
+    print("See Mine (M)ap")
+    print("(E)nter mine")
+    print("(S)ell ore from warehouse")
+    print("Sa(V)e game")
+    print("(Q)uit to main menu")
+    print("------------------------")
+
+def town_loop():
+    while True:
+        show_town_menu()
+        valid_inputs = ['b', 'i', 'm', 'e', 'v', 'q', 's']
+        try:
+            choice = input("Your choice? ").strip().lower()
+        except KeyboardInterrupt:
+            print("\nKeyboardInterrupt detected. Returning to main menu.")
+            return
+        if choice not in valid_inputs:
+            print("Invalid choice, please try again.")
+            continue
+        if choice == 'b':
+            buy_stuff()
+        elif choice == 'i':
+            show_information()
+        elif choice == 'm':
+            draw_map()
+        elif choice == 'e':
+            mine_turn()
+        elif choice == 's':
+            sell_ore()
+        elif choice == 'v':
+            save_game()
+        elif choice == 'q':
+            break
+
+# ---------- Return to Town ----------
+def return_to_town():
+    print("\nYou place your portal stone here and zap back to town.")
+    player['portal'] = (player['x'], player['y'])
+
+    for ore in ['copper', 'silver', 'gold']:
+        count = player[ore]
+        if count > 0:
+            player['warehouse'][ore] += count
+            print(f"You store {count} {ore} ore in the warehouse.")
+            player[ore] = 0
+
+    print(f"Your warehouse now has: Copper: {player['warehouse']['copper']}, Silver: {player['warehouse']['silver']}, Gold: {player['warehouse']['gold']}")
+    player['x'], player['y'] = 0, 0
+    player['day'] += 1
+    player['turns'] = TURNS_PER_DAY
+
+    # 20% chance to replenish each mined node
+    global mined_nodes
+    replenished = []
+    for idx, (x, y, node_type) in enumerate(mined_nodes):
+        if 0 <= y < len(game_map) and 0 <= x < len(game_map[y]):
+            if randint(1, 100) <= 20 and game_map[y][x] == ' ':
+                game_map[y][x] = node_type
+                replenished.append(idx)
+
+    for idx in reversed(replenished):
+        mined_nodes.pop(idx)
+    clear_fog(fog, player)
+    win_check()
