@@ -420,3 +420,34 @@ def return_to_town():
         mined_nodes.pop(idx)
     clear_fog(fog, player)
     win_check()
+
+# ---------- Win Check ----------
+def win_check():
+    if player['GP'] >= WIN_GP:
+        print("-" * 60)
+        print(f"Woo-hoo! Well done, {player['name']}, you have {player['GP']} GP!")
+        print(f"You now have enough to retire and play video games every day.")
+        print(f"And it only took you {player['day']} days and {player['steps']} steps! You win!")
+        print("-" * 60)
+        record_high_score()
+        main_loop()
+
+# ---------- High Scores ----------
+def record_high_score():
+    high_scores.append({
+        'name': player['name'],
+        'days': player['day'],
+        'steps': player['steps'],
+        'GP': player['GP']
+    })
+    high_scores.sort(key=lambda s: (s['days'], s['steps'], -s['GP']))
+    if len(high_scores) > 5:
+        high_scores[:] = high_scores[:5]
+
+def view_high_scores():
+    print("\n--- Top 5 High Scores ---")
+    if not high_scores:
+        print("No scores recorded yet.")
+        return
+    for i, entry in enumerate(high_scores, 1):
+        print(f"{i}. {entry['name']} - Days: {entry['days']}, Steps: {entry['steps']}, GP: {entry['GP']}")
